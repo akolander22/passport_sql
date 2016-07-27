@@ -5,27 +5,16 @@ var path = require('path');
 var passport = require('passport'); // npm install
 var session = require('express-session'); // npm install
 var LocalStrategy = require('passport-local').Strategy;
-var mongoose = require('mongoose');
+
 var User = require('./models/user');
 var login = require('./routes/login');
 var register = require('./routes/register');
 
-var mongoURI = 'mongodb://localhost:27017/prime_example_passport';
-
-var MongoDB = mongoose.connect(mongoURI).connection;
-
-MongoDB.on('error', function(err) {
-  console.log('Mongo error', err);
-});
-
-MongoDB.once('open', function(){
-  console.log('Mongo connection opened');
-});
 
 var app = express();
 
 app.use(session({
-  secret: 'kitty',
+  secret: 'shenanigans',
   key: 'user',
   resave: true,
   saveUninitialized: false,
@@ -39,27 +28,19 @@ passport.use('local', new LocalStrategy({
   usernameField: 'username',
   passwordField: 'password'
 }, function(username, password, done) {
-  User.findOne({ username: username }, function(err, user){
+  User.comparePassword(username, password, function(err, isMatch, user){
     if (err) {
       throw err;
     }
-
     if (!user) {
-      // didn't find a user with the same username
       return done(null, false);
     }
-
-    // at this point we have found a user
-    // still need to check their password
-    user.comparePassword(password, function(err, isMatch){
       if (isMatch) {
-        // successfully auth the user
         return done(null, user);
       } else {
         done(null, false);
       }
     });
-  });
 }));
 
 // converts user to user id
@@ -73,7 +54,6 @@ passport.deserializeUser(function(id, done){
     if (err) {
       return done(err);
     }
-
     done(null, user);
   });
 });
@@ -90,13 +70,6 @@ app.get('/', function(request, response) {
 app.use('/login', login);
 app.use('/register', register);
 
-app.use('/api', function(req, res, next){
-  if (req.isAuthenticated()) {
-    next();
-  } else {
-    res.sendStatus(403);
-  }
-});
 
 var port = process.env.PORT || 3000;
 var server = app.listen(port, function () {

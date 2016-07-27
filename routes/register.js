@@ -3,17 +3,17 @@ var path = require('path');
 
 var User = require('../models/user');
 
-router.get('/', function(req, res) {
-  res.sendFile(path.join(__dirname, '../public/views/register.html'));
+router.get('/', function(request, response) {
+  response.sendFile(path.join(__dirname, '../public/views/register.html'));
 });
 
-router.post('/', function(req, res) {
-  User.create(req.body, function(err) {
+router.post('/', function(request, response) {
+  User.create(request.body.username, request.body.password, function(err) {
     if (err) {
       console.log(err);
-      res.sendStatus(500);
+      response.sendStatus(500);
     } else {
-      res.redirect('/');
+      response.redirect('/');
     }
   });
 });
